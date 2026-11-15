@@ -21,21 +21,22 @@ INITIAL_REGIONS: dict[str, str] = {
 }
 
 # "region" is the geographic exposure of the asset, not its listing market.
+# "broker_symbol" is the Moomoo security code used to match synced positions and fills.
 INITIAL_ASSETS: list[dict[str, object]] = [
     {"symbol": "BTC-AUD", "name": "Bitcoin", "asset_class": AssetClass.CRYPTO,
-     "market": "Cryptocurrency", "currency": "AUD", "region": None},
+     "market": "Cryptocurrency", "currency": "AUD", "region": None, "broker_symbol": None},
     {"symbol": "AAPL", "name": "Apple", "asset_class": AssetClass.SHARE,
-     "market": "US", "currency": "USD", "region": "US"},
+     "market": "US", "currency": "USD", "region": "US", "broker_symbol": "US.AAPL"},
     {"symbol": "IOZ.AX", "name": "iShares Core S&P/ASX 200 ETF", "asset_class": AssetClass.SHARE,
-     "market": "ASX", "currency": "AUD", "region": "AU"},
+     "market": "ASX", "currency": "AUD", "region": "AU", "broker_symbol": "AU.IOZ"},
     {"symbol": "NDQ.AX", "name": "BetaShares Nasdaq 100 ETF", "asset_class": AssetClass.SHARE,
-     "market": "ASX", "currency": "AUD", "region": "US"},
+     "market": "ASX", "currency": "AUD", "region": "US", "broker_symbol": "AU.NDQ"},
     {"symbol": "VEQ.AX", "name": "Vanguard FTSE Europe ETF", "asset_class": AssetClass.SHARE,
-     "market": "ASX", "currency": "AUD", "region": "EU"},
+     "market": "ASX", "currency": "AUD", "region": "EU", "broker_symbol": "AU.VEQ"},
     {"symbol": "SHL.AX", "name": "Sonic Healthcare", "asset_class": AssetClass.SHARE,
-     "market": "ASX", "currency": "AUD", "region": "AU"},
+     "market": "ASX", "currency": "AUD", "region": "AU", "broker_symbol": "AU.SHL"},
     {"symbol": "VAP.AX", "name": "Vanguard Australian Property ETF", "asset_class": AssetClass.PROPERTY,
-     "market": "ASX", "currency": "AUD", "region": "AU"},
+     "market": "ASX", "currency": "AUD", "region": "AU", "broker_symbol": "AU.VAP"},
 ]
 
 # Recommended update frequencies (minutes), configurable from the dashboard.
@@ -49,6 +50,7 @@ DEFAULT_APP_SETTINGS: dict[str, tuple[str, str]] = {
     "schedule.dividends_interval_minutes": ("1440", "Dividend information collection interval"),
     "display.timezone": ("Australia/Melbourne", "Presentation timezone"),
     "reporting.currency": ("AUD", "Reporting currency"),
+    "moomoo.history_start": ("2025-01-01", "Earliest date to import Moomoo fills and cash flows from"),
 }
 
 

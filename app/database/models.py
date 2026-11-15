@@ -108,6 +108,7 @@ class SyncType(str, enum.Enum):
     POSITIONS = "positions"
     TRANSACTIONS = "transactions"
     CASH_MOVEMENTS = "cash_movements"
+    BALANCES = "balances"
     DIVIDENDS = "dividends"
 
 
@@ -169,6 +170,8 @@ class Asset(Base):
         ForeignKey("regions.id", ondelete="RESTRICT"), index=True
     )
     provider_symbol: Mapped[str | None] = mapped_column(String(64))
+    # Broker security code (Moomoo "MARKET.CODE", e.g. US.AAPL) used to match synced data.
+    broker_symbol: Mapped[str | None] = mapped_column(String(32), unique=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
     # Manually managed assets are held outside the broker and never overwritten by syncs.
     is_manual: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
@@ -222,6 +225,7 @@ class Transaction(Base):
         ForeignKey("broker_accounts.id", ondelete="RESTRICT")
     )
     broker_transaction_id: Mapped[str | None] = mapped_column(String(64))
+    broker_order_id: Mapped[str | None] = mapped_column(String(64))
     side: Mapped[TransactionSide] = mapped_column(_enum(TransactionSide))
     quantity: Mapped[Decimal]
     price: Mapped[Decimal]
@@ -253,6 +257,30 @@ class Position(Base):
     quantity: Mapped[Decimal]
     average_cost: Mapped[Decimal | None]
     currency: Mapped[str] = mapped_column(String(3))
+    synced_at: Mapped[datetime]
+    sync_history_id: Mapped[int | None] = mapped_column(
+        ForeignKey("sync_history.id", ondelete="SET NULL")
+    )
+
+
+class BrokerCashBalance(Base):
+    """Cash held in a broker account in one currency, as reported by the broker.
+
+    Append-only: every balance sync adds rows, so the history is preserved.
+    """
+
+    __tablename__ = "broker_cash_balances"
+    __table_args__ = (
+        UniqueConstraint("broker_account_id", "currency", "synced_at"),
+        Index("ix_broker_cash_balances_broker_account_id_synced_at", "broker_account_id", "synced_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    broker_account_id: Mapped[int] = mapped_column(
+        ForeignKey("broker_accounts.id", ondelete="RESTRICT")
+    )
+    currency: Mapped[str] = mapped_column(String(3))
+    cash_balance: Mapped[Decimal]
     synced_at: Mapped[datetime]
     sync_history_id: Mapped[int | None] = mapped_column(
         ForeignKey("sync_history.id", ondelete="SET NULL")
@@ -325,6 +353,8 @@ class CashMovement(Base):
     )
     asset_id: Mapped[int | None] = mapped_column(ForeignKey("assets.id", ondelete="RESTRICT"))
     broker_movement_id: Mapped[str | None] = mapped_column(String(64))
+    # Raw broker cash flow type, kept so movements can be re-classified later.
+    broker_type: Mapped[str | None] = mapped_column(String(64))
     movement_type: Mapped[CashMovementType] = mapped_column(_enum(CashMovementType))
     amount: Mapped[Decimal]
     currency: Mapped[str] = mapped_column(String(3))

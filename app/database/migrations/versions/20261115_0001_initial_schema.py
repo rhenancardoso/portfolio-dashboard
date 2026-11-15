@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises: 
-Create Date: 2026-11-15 21:57:13.384164
+Create Date: 2026-11-15 22:30:59.880039
 """
 from typing import Sequence, Union
 
@@ -151,12 +151,14 @@ def upgrade() -> None:
     sa.Column('currency', sa.String(length=3), nullable=False),
     sa.Column('region_id', sa.Integer(), nullable=True),
     sa.Column('provider_symbol', sa.String(length=64), nullable=True),
+    sa.Column('broker_symbol', sa.String(length=32), nullable=True),
     sa.Column('is_active', sa.Boolean(), server_default='1', nullable=False),
     sa.Column('is_manual', sa.Boolean(), server_default='0', nullable=False),
     sa.Column('created_at', app.database.types.UTCDateTime(), nullable=False),
     sa.Column('updated_at', app.database.types.UTCDateTime(), nullable=False),
     sa.ForeignKeyConstraint(['region_id'], ['regions.id'], name=op.f('fk_assets_region_id_regions'), ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_assets')),
+    sa.UniqueConstraint('broker_symbol', name=op.f('uq_assets_broker_symbol')),
     sa.UniqueConstraint('symbol', name=op.f('uq_assets_symbol'))
     )
     with op.batch_alter_table('assets', schema=None) as batch_op:
@@ -224,7 +226,7 @@ def upgrade() -> None:
     op.create_table('sync_history',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('broker_account_id', sa.Integer(), nullable=True),
-    sa.Column('sync_type', sa.Enum('accounts', 'positions', 'transactions', 'cash_movements', 'dividends', name='synctype', native_enum=False, create_constraint=True, length=32), nullable=False),
+    sa.Column('sync_type', sa.Enum('accounts', 'positions', 'transactions', 'cash_movements', 'balances', 'dividends', name='synctype', native_enum=False, create_constraint=True, length=32), nullable=False),
     sa.Column('status', sa.Enum('running', 'success', 'partial', 'failed', 'skipped', name='runstatus', native_enum=False, create_constraint=True, length=32), nullable=False),
     sa.Column('started_at', app.database.types.UTCDateTime(), nullable=False),
     sa.Column('finished_at', app.database.types.UTCDateTime(), nullable=True),
@@ -262,11 +264,27 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id', name=op.f('pk_yearly_performance')),
     sa.UniqueConstraint('plan_id', 'year', name=op.f('uq_yearly_performance_plan_id_year'))
     )
+    op.create_table('broker_cash_balances',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('broker_account_id', sa.Integer(), nullable=False),
+    sa.Column('currency', sa.String(length=3), nullable=False),
+    sa.Column('cash_balance', app.database.types.Money(), nullable=False),
+    sa.Column('synced_at', app.database.types.UTCDateTime(), nullable=False),
+    sa.Column('sync_history_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['broker_account_id'], ['broker_accounts.id'], name=op.f('fk_broker_cash_balances_broker_account_id_broker_accounts'), ondelete='RESTRICT'),
+    sa.ForeignKeyConstraint(['sync_history_id'], ['sync_history.id'], name=op.f('fk_broker_cash_balances_sync_history_id_sync_history'), ondelete='SET NULL'),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_broker_cash_balances')),
+    sa.UniqueConstraint('broker_account_id', 'currency', 'synced_at', name=op.f('uq_broker_cash_balances_broker_account_id_currency_synced_at'))
+    )
+    with op.batch_alter_table('broker_cash_balances', schema=None) as batch_op:
+        batch_op.create_index('ix_broker_cash_balances_broker_account_id_synced_at', ['broker_account_id', 'synced_at'], unique=False)
+
     op.create_table('cash_movements',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('broker_account_id', sa.Integer(), nullable=True),
     sa.Column('asset_id', sa.Integer(), nullable=True),
     sa.Column('broker_movement_id', sa.String(length=64), nullable=True),
+    sa.Column('broker_type', sa.String(length=64), nullable=True),
     sa.Column('movement_type', sa.Enum('deposit', 'withdrawal', 'dividend', 'withholding_tax', 'fee', 'interest', 'other', name='cashmovementtype', native_enum=False, create_constraint=True, length=32), nullable=False),
     sa.Column('amount', app.database.types.Money(), nullable=False),
     sa.Column('currency', sa.String(length=3), nullable=False),
@@ -340,6 +358,7 @@ def upgrade() -> None:
     sa.Column('asset_id', sa.Integer(), nullable=False),
     sa.Column('broker_account_id', sa.Integer(), nullable=True),
     sa.Column('broker_transaction_id', sa.String(length=64), nullable=True),
+    sa.Column('broker_order_id', sa.String(length=64), nullable=True),
     sa.Column('side', sa.Enum('buy', 'sell', name='transactionside', native_enum=False, create_constraint=True, length=32), nullable=False),
     sa.Column('quantity', app.database.types.Money(), nullable=False),
     sa.Column('price', app.database.types.Money(), nullable=False),
@@ -524,6 +543,10 @@ def downgrade() -> None:
         batch_op.drop_index('ix_cash_movements_movement_type_occurred_at')
 
     op.drop_table('cash_movements')
+    with op.batch_alter_table('broker_cash_balances', schema=None) as batch_op:
+        batch_op.drop_index('ix_broker_cash_balances_broker_account_id_synced_at')
+
+    op.drop_table('broker_cash_balances')
     op.drop_table('yearly_performance')
     with op.batch_alter_table('sync_history', schema=None) as batch_op:
         batch_op.drop_index('ix_sync_history_sync_type_started_at')
