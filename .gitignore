@@ -1,0 +1,12 @@
+.py*
+__pycache__/
+*.py[cod]
+
+# Secrets and local configuration
+.env
+*.pem
+*.key
+
+# Local database and backups
+data/*
+!data/.gitkeep
