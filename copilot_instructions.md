@@ -3,7 +3,7 @@
 
 ## 1. Project Overview
 
-Develop a self-hosted personal financial portfolio management application running on a Raspberry Pi 3 Model B v1.2.
+Develop a self-hosted personal financial portfolio management application running on an Intel NUC.
 
 The application collects financial market data from external APIs, synchronises investment transactions and holdings from a Moomoo brokerage account, manages manually maintained cash assets, calculates portfolio performance, tracks dividends and provides financial forecasting.
 
@@ -32,15 +32,15 @@ The primary reporting currency is AUD (Australian Dollar).
 
 ### Hardware
 
-- Raspberry Pi 3 Model B v1.2
-- Broadcom BCM2837, Quad-core ARM Cortex-A53, 1.2 GHz
-- 1 GB RAM
-- Wi-Fi 2.4 GHz / Ethernet
-- microSD storage
+- Intel NUC
+- Intel Core i5-5300U, dual-core / 4 threads, 2.3 GHz
+- 16 GB RAM
+- Ethernet
+- 256 GB SSD
 
 ### Operating system
 
-Raspberry Pi OS Lite (64-bit).
+Ubuntu Server 26.04 LTS (x86_64).
 
 ### Runtime
 
@@ -48,7 +48,7 @@ Raspberry Pi OS Lite (64-bit).
 - Linux systemd for service management and scheduling
 - SQLite for persistent storage
 
-The application must be compatible with the Raspberry Pi 3's ARM64 architecture.
+The application must be compatible with the NUC's x86_64 architecture.
 
 Avoid unnecessarily resource-intensive libraries and services.
 
@@ -72,7 +72,7 @@ Docker is not required. Prefer running Python applications directly as Linux ser
 | Scheduling | systemd timers / scheduled Python jobs |
 | Testing | Pytest |
 | Logging | Python logging |
-| Deployment | Raspberry Pi OS Lite |
+| Deployment | Ubuntu Server (systemd services) |
 
 Keep the application lightweight and modular.
 
@@ -545,6 +545,7 @@ portfolio-dashboard/
 │
 ├── requirements.txt
 ├── README.md
+├── CONTRIBUTING.md
 ├── copilot_instructions.md
 └── .gitignore
 ```
@@ -557,9 +558,9 @@ This structure is a starting point. It can be adjusted when implementation detai
 
 Develop the application incrementally.
 
-### Milestone 1: Raspberry Pi environment
+### Milestone 1: NUC environment
 
-- Install Raspberry Pi OS Lite 64-bit.
+- Install Ubuntu Server 26.04 LTS.
 - Configure networking and SSH.
 - Install Python dependencies.
 - Create project structure.
@@ -649,7 +650,7 @@ Follow these rules throughout development.
 7. Avoid unnecessary abstractions.
 8. Avoid global mutable state.
 9. Keep business logic independent of Flask routes.
-10. Prefer simple, maintainable implementations suitable for a small Raspberry Pi server.
+10. Prefer simple, maintainable implementations suitable for a small home NUC server.
 
 ### Financial calculations
 
@@ -717,7 +718,7 @@ GitHub Copilot must follow these principles:
 - Do not invent API endpoints or authentication flows.
 - Do not hardcode portfolio holdings.
 - Do not introduce paid dependencies without explicit approval.
-- Do not overcomplicate the Raspberry Pi deployment.
+- Do not overcomplicate the NUC deployment.
 - Do not use cloud databases when SQLite is sufficient.
 - Do not introduce Docker unless specifically requested.
 - Do not change established accounting rules without explaining the impact.
@@ -733,7 +734,7 @@ If a requirement is ambiguous, ask for clarification rather than making assumpti
 
 Start development in this order:
 
-1. Establish the Raspberry Pi development environment.
+1. Establish the NUC development environment.
 2. Create the Flask application.
 3. Implement SQLite database and initial asset configuration.
 4. Implement Moomoo API authentication and account retrieval.
@@ -753,6 +754,6 @@ The final application should provide an automated, reliable and self-hosted fina
 
 It should automatically retrieve market data, synchronise brokerage activity, track dividends, calculate investment performance, preserve historical portfolio values and provide configurable long-term forecasts.
 
-The application should operate continuously on the Raspberry Pi 3 Model B v1.2, with minimal maintenance and no mandatory recurring subscription costs.
+The application should operate continuously on the Intel NUC, with minimal maintenance and no mandatory recurring subscription costs.
 
 **Primary design objective: a lightweight, modular, secure and maintainable personal financial portfolio server.**
