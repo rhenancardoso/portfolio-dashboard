@@ -169,6 +169,8 @@ class Asset(Base):
     region_id: Mapped[int | None] = mapped_column(
         ForeignKey("regions.id", ondelete="RESTRICT"), index=True
     )
+    # Market data provider name (e.g. "yahoo", "coingecko") and the symbol it uses.
+    price_provider: Mapped[str | None] = mapped_column(String(32))
     provider_symbol: Mapped[str | None] = mapped_column(String(64))
     # Broker security code (Moomoo "MARKET.CODE", e.g. US.AAPL) used to match synced data.
     broker_symbol: Mapped[str | None] = mapped_column(String(32), unique=True)
@@ -748,9 +750,14 @@ class CollectionLog(Base):
     """One market data collection attempt."""
 
     __tablename__ = "collection_logs"
-    __table_args__ = (Index("ix_collection_logs_provider_started_at", "provider", "started_at"),)
+    __table_args__ = (
+        Index("ix_collection_logs_provider_started_at", "provider", "started_at"),
+        Index("ix_collection_logs_job_started_at", "job", "started_at"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    # Scheduled job that made the attempt (e.g. "prices.asx", "exchange_rates").
+    job: Mapped[str | None] = mapped_column(String(32))
     provider: Mapped[str] = mapped_column(String(32))
     data_type: Mapped[CollectionType] = mapped_column(_enum(CollectionType))
     asset_id: Mapped[int | None] = mapped_column(ForeignKey("assets.id", ondelete="SET NULL"))

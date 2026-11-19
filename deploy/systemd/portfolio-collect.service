@@ -1,0 +1,13 @@
+[Unit]
+Description=Portfolio dashboard - collect due market data
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=portfolio
+WorkingDirectory=/opt/portfolio-dashboard
+# COINGECKO_API_KEY and other settings; keep this file out of source control (chmod 600).
+EnvironmentFile=-/etc/portfolio-dashboard/env
+ExecStart=/opt/portfolio-dashboard/.py313/bin/python -m app.scheduler.jobs run-due
+TimeoutStartSec=10min

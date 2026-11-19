@@ -8,6 +8,7 @@ dependencies = [
     "SQLAlchemy>=2.0,<2.1",
     "alembic>=1.13,<2.0",
     "moomoo-api (>=10.12,<11)",
+    "requests (>=2.32,<3)",
 ]
 
 [dependency-groups]

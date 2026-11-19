@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises: 
-Create Date: 2026-11-15 22:30:59.880039
+Create Date: 2026-11-15 23:35:46.256723
 """
 from typing import Sequence, Union
 
@@ -150,6 +150,7 @@ def upgrade() -> None:
     sa.Column('market', sa.String(length=32), nullable=False),
     sa.Column('currency', sa.String(length=3), nullable=False),
     sa.Column('region_id', sa.Integer(), nullable=True),
+    sa.Column('price_provider', sa.String(length=32), nullable=True),
     sa.Column('provider_symbol', sa.String(length=64), nullable=True),
     sa.Column('broker_symbol', sa.String(length=32), nullable=True),
     sa.Column('is_active', sa.Boolean(), server_default='1', nullable=False),
@@ -305,6 +306,7 @@ def upgrade() -> None:
 
     op.create_table('collection_logs',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('job', sa.String(length=32), nullable=True),
     sa.Column('provider', sa.String(length=32), nullable=False),
     sa.Column('data_type', sa.Enum('price', 'exchange_rate', 'dividend', name='collectiontype', native_enum=False, create_constraint=True, length=32), nullable=False),
     sa.Column('asset_id', sa.Integer(), nullable=True),
@@ -318,6 +320,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id', name=op.f('pk_collection_logs'))
     )
     with op.batch_alter_table('collection_logs', schema=None) as batch_op:
+        batch_op.create_index('ix_collection_logs_job_started_at', ['job', 'started_at'], unique=False)
         batch_op.create_index('ix_collection_logs_provider_started_at', ['provider', 'started_at'], unique=False)
 
     op.create_table('market_prices',
@@ -536,6 +539,7 @@ def downgrade() -> None:
     op.drop_table('market_prices')
     with op.batch_alter_table('collection_logs', schema=None) as batch_op:
         batch_op.drop_index('ix_collection_logs_provider_started_at')
+        batch_op.drop_index('ix_collection_logs_job_started_at')
 
     op.drop_table('collection_logs')
     with op.batch_alter_table('cash_movements', schema=None) as batch_op:

@@ -22,21 +22,29 @@ INITIAL_REGIONS: dict[str, str] = {
 
 # "region" is the geographic exposure of the asset, not its listing market.
 # "broker_symbol" is the Moomoo security code used to match synced positions and fills.
+# "price_provider"/"provider_symbol" choose the market data source and its symbol.
 INITIAL_ASSETS: list[dict[str, object]] = [
     {"symbol": "BTC-AUD", "name": "Bitcoin", "asset_class": AssetClass.CRYPTO,
-     "market": "Cryptocurrency", "currency": "AUD", "region": None, "broker_symbol": None},
+     "market": "Cryptocurrency", "currency": "AUD", "region": None, "broker_symbol": None,
+     "price_provider": "coingecko", "provider_symbol": "bitcoin"},
     {"symbol": "AAPL", "name": "Apple", "asset_class": AssetClass.SHARE,
-     "market": "US", "currency": "USD", "region": "US", "broker_symbol": "US.AAPL"},
+     "market": "US", "currency": "USD", "region": "US", "broker_symbol": "US.AAPL",
+     "price_provider": "yahoo", "provider_symbol": "AAPL"},
     {"symbol": "IOZ.AX", "name": "iShares Core S&P/ASX 200 ETF", "asset_class": AssetClass.SHARE,
-     "market": "ASX", "currency": "AUD", "region": "AU", "broker_symbol": "AU.IOZ"},
+     "market": "ASX", "currency": "AUD", "region": "AU", "broker_symbol": "AU.IOZ",
+     "price_provider": "yahoo", "provider_symbol": "IOZ.AX"},
     {"symbol": "NDQ.AX", "name": "BetaShares Nasdaq 100 ETF", "asset_class": AssetClass.SHARE,
-     "market": "ASX", "currency": "AUD", "region": "US", "broker_symbol": "AU.NDQ"},
+     "market": "ASX", "currency": "AUD", "region": "US", "broker_symbol": "AU.NDQ",
+     "price_provider": "yahoo", "provider_symbol": "NDQ.AX"},
     {"symbol": "VEQ.AX", "name": "Vanguard FTSE Europe ETF", "asset_class": AssetClass.SHARE,
-     "market": "ASX", "currency": "AUD", "region": "EU", "broker_symbol": "AU.VEQ"},
+     "market": "ASX", "currency": "AUD", "region": "EU", "broker_symbol": "AU.VEQ",
+     "price_provider": "yahoo", "provider_symbol": "VEQ.AX"},
     {"symbol": "SHL.AX", "name": "Sonic Healthcare", "asset_class": AssetClass.SHARE,
-     "market": "ASX", "currency": "AUD", "region": "AU", "broker_symbol": "AU.SHL"},
+     "market": "ASX", "currency": "AUD", "region": "AU", "broker_symbol": "AU.SHL",
+     "price_provider": "yahoo", "provider_symbol": "SHL.AX"},
     {"symbol": "VAP.AX", "name": "Vanguard Australian Property ETF", "asset_class": AssetClass.PROPERTY,
-     "market": "ASX", "currency": "AUD", "region": "AU", "broker_symbol": "AU.VAP"},
+     "market": "ASX", "currency": "AUD", "region": "AU", "broker_symbol": "AU.VAP",
+     "price_provider": "yahoo", "provider_symbol": "VAP.AX"},
 ]
 
 # Recommended update frequencies (minutes), configurable from the dashboard.

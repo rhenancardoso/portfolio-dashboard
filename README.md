@@ -1,7 +1,8 @@
 # Portfolio Dashboard
 
-Self-hosted personal portfolio dashboard (Flask, SQLite, SQLAlchemy, Alembic) for a
-Raspberry Pi. See [copilot_instructions.md](copilot_instructions.md) for the full specification.
+Self-hosted personal portfolio dashboard (Flask, SQLite, SQLAlchemy, Alembic) running
+on a Logic Supply ML100G-30 with Ubuntu Server 24.04 LTS. See
+[copilot_instructions.md](copilot_instructions.md) for the full specification.
 
 ## Setup
 
@@ -40,8 +41,8 @@ password. Before the first use, accept the API disclaimer for Moomoo AU
 1. Download OpenD from <https://www.moomoo.com/download/OpenAPI> and log in.
 2. Keep the API port at `11111` (or set `MOOMOO_OPEND_PORT`).
 3. OpenD is published for Windows, macOS, CentOS and Ubuntu. If it can't run on the
-   Raspberry Pi, run it on another machine and set `MOOMOO_OPEND_HOST`; in that case
-   enable RSA protocol encryption in OpenD and set `MOOMOO_RSA_KEY_PATH` to the same key.
+   server, run it on another machine and set `MOOMOO_OPEND_HOST`; in that case enable
+   RSA protocol encryption in OpenD and set `MOOMOO_RSA_KEY_PATH` to the same key.
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -81,10 +82,52 @@ cash flow types, which are needed to classify deposits and dividends.
   Holdings bought before `moomoo.history_start` show as differences until opening
   positions are recorded.
 
+## Market data
+
+| Data | Provider | Notes |
+|---|---|---|
+| ASX shares (`IOZ.AX` …) and US shares (`AAPL`) | Yahoo Finance chart endpoint | Free, no key. **Unofficial and unsupported**: it may change or be rate limited without notice. Prices are delayed. |
+| Bitcoin (AUD) | CoinGecko Demo API | Free key from coingecko.com, set `COINGECKO_API_KEY`. |
+| USD/AUD | Frankfurter (`api.frankfurter.dev`) | Free, no key. Daily reference rates, not live quotes. |
+
+Each asset's source is data, not code: `assets.price_provider` (`yahoo`, `coingecko`) and
+`assets.provider_symbol`. Every stored price keeps the provider's market timestamp and the
+retrieval timestamp separately. When a fetch fails, the last valid price is kept and
+flagged `stale`; every attempt is recorded in `collection_logs`.
+
+```bash
+python -m app.scheduler.jobs run-due          # run the jobs that are due (used by the timer)
+python -m app.scheduler.jobs collect JOB      # force one: prices.crypto, prices.asx, prices.us, exchange_rates
+python -m app.scheduler.jobs status           # latest price/rate, market time and retrieval time
+```
+
+### Scheduling
+
+A systemd timer ([deploy/systemd](deploy/systemd)) starts `run-due` every 15 minutes; the
+job decides what is due, so intervals can be changed in `app_settings`
+(`schedule.*_interval_minutes`, editable from the dashboard) without touching the timer.
+
+- Bitcoin runs every interval, 24/7.
+- ASX (10:00–16:00 Sydney) and US (09:30–16:00 New York) prices run every interval while
+  the market is open, plus once 30 minutes after each close for the closing price.
+  Daylight saving is handled; public holidays are not modelled (a few extra requests).
+- Exchange rates run once per interval (daily by default).
+- After a failed attempt a job waits 30 minutes (or its interval, if shorter) before retrying;
+  HTTP requests also retry 429/5xx responses with exponential backoff.
+- A lock file next to the database prevents overlapping runs.
+
+Install the units (adjust `User`, paths and the environment file first):
+
+```bash
+sudo cp deploy/systemd/portfolio-collect.* /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now portfolio-collect.timer
+```
+
 ## Tests
 
 ```bash
 python -m pytest -q
 ```
 
-Tests use a temporary database and fake Moomoo responses; they never contact a broker.
+Tests use a temporary database and fake provider and Moomoo responses; they never call external APIs.
