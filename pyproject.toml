@@ -1,10 +1,12 @@
 [project]
 name = "portfolio-dashboard"
 version = "0.1.0"
-description = "Self-hosted personal financial portfolio dashboard for Raspberry Pi"
+description = "Self-hosted personal financial portfolio dashboard for a home Intel NUC server"
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
 dependencies = [
+    "Flask>=3.1,<4.0",
+    "gunicorn>=23.0,<28.0",
     "SQLAlchemy>=2.0,<2.1",
     "alembic>=1.13,<2.0",
 ]

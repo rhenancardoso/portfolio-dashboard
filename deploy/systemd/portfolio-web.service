@@ -1,0 +1,20 @@
+[Unit]
+Description=Portfolio dashboard - web application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ryc-server
+WorkingDirectory=/home/ryc-server/dev/portfolio-dashboard
+# Settings and secrets (PORTFOLIO_DB_PATH, COINGECKO_API_KEY, ...); keep out of source control (chmod 600).
+EnvironmentFile=-/etc/portfolio-dashboard/env
+# Listens on localhost only until dashboard authentication and HTTPS exist (Milestone 8).
+ExecStart=/home/ryc-server/dev/portfolio-dashboard/.py314/bin/gunicorn --bind 127.0.0.1:8000 --workers 2 --access-logfile - "app.main:create_app()"
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
